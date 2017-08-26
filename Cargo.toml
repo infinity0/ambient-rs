@@ -1,0 +1,9 @@
+[package]
+name = "ambient"
+version = "0.1.0"
+authors = ["Ximin Luo"]
+
+[dependencies]
+caps = "0.0.2"
+clap = "2.26.0"
+exec = "0.3.0"
