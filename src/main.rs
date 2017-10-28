@@ -2,27 +2,12 @@ extern crate caps;
 extern crate clap;
 extern crate exec;
 
+use std::str::FromStr;
 use caps::{Capability, CapSet};
 use clap::{Arg, App, AppSettings};
+use std::string::ToString;
 
-fn parse_capability(s: String) -> Result<Capability, String> {
-    let cs = &s.to_uppercase();
-    // TODO: have cap-rs use EnumFromStr from enum-derive
-    for x in Capability::iter_variant_names().zip(Capability::iter_variants()) {
-        let (name, cap) = x;
-        if name.eq(cs) || name.eq(&format!("CAP_{}", cs)) {
-            return Ok(cap)
-        }
-    }
-    Err(format!("capability not recognised: {}", s))
-}
-
-fn check_capability(s: String) -> Result<(), String> {
-    try!(parse_capability(s));
-    Ok(())
-}
-
-fn raise_capability(c: Capability) -> Result<(), caps::Error> {
+fn raise_capability(c: Capability) -> Result<(), caps::errors::Error> {
     // this needs to be done before the ambient set is raised
     try!(caps::raise(None, CapSet::Inheritable, c));
     try!(caps::raise(None, CapSet::Ambient, c));
@@ -46,7 +31,7 @@ fn main() {
              .help("Set an ambient capability.")
              .takes_value(true)
              .value_name("CAP")
-             .validator(check_capability)
+             .validator(|s| Capability::from_str(&s).map(|_| ()).map_err(|e| e.to_string()))
              .use_delimiter(true)
              .number_of_values(1)
              .multiple(true))
@@ -60,7 +45,7 @@ fn main() {
     let quiet = matches.occurrences_of("quiet") > 0;
 
     for cap in caps {
-        let capv = parse_capability(cap.to_string()).unwrap();
+        let capv = Capability::from_str(&cap.to_string()).unwrap();
         match raise_capability(capv) {
             Ok(_) => if !quiet {
                 eprintln!("Raised in inheritable and ambient capsets: {} ({:?})",
