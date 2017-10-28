@@ -5,7 +5,6 @@ extern crate exec;
 use std::str::FromStr;
 use caps::{Capability, CapSet};
 use clap::{Arg, App, AppSettings};
-use std::string::ToString;
 
 fn raise_capability(c: Capability) -> Result<(), caps::errors::Error> {
     // this needs to be done before the ambient set is raised
