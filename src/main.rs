@@ -3,7 +3,7 @@ extern crate clap;
 extern crate exec;
 
 use std::str::FromStr;
-use caps::{Capability, CapSet};
+use caps::{Capability, CapSet, to_canonical};
 use clap::{Arg, App, AppSettings};
 
 fn raise_capability(c: Capability) -> Result<(), caps::errors::Error> {
@@ -30,7 +30,7 @@ fn main() {
              .help("Set an ambient capability.")
              .takes_value(true)
              .value_name("CAP")
-             .validator(|s| Capability::from_str(&s).map(|_| ()).map_err(|e| e.to_string()))
+             .validator(|s| Capability::from_str(&to_canonical(&s)).map(|_| ()).map_err(|e| e.to_string()))
              .use_delimiter(true)
              .number_of_values(1)
              .multiple(true))
@@ -44,7 +44,7 @@ fn main() {
     let quiet = matches.occurrences_of("quiet") > 0;
 
     for cap in caps {
-        let capv = Capability::from_str(&cap.to_string()).unwrap();
+        let capv = Capability::from_str(&to_canonical(cap)).unwrap();
         match raise_capability(capv) {
             Ok(_) => if !quiet {
                 eprintln!("Raised in inheritable and ambient capsets: {} ({:?})",
